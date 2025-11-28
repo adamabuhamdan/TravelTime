@@ -12,6 +12,12 @@ from dotenv import load_dotenv
 from google import genai
 from google.genai import types
 
+import io
+import cloudinary
+import cloudinary.uploader
+from cloudinary.utils import cloudinary_url
+
+
 # ===================== تحميل متغيرات البيئة =====================
 
 load_dotenv()
@@ -23,6 +29,21 @@ if not GEMINI_API_KEY:
 WAVESPEED_API_KEY = os.environ.get("WAVESPEED_API_KEY")
 if not WAVESPEED_API_KEY:
     raise RuntimeError("الرجاء ضبط متغير البيئة WAVESPEED_API_KEY في ملف .env.")
+
+CLOUDINARY_CLOUD_NAME = os.environ.get("CLOUDINARY_CLOUD_NAME")
+CLOUDINARY_API_KEY = os.environ.get("CLOUDINARY_API_KEY")
+CLOUDINARY_API_SECRET = os.environ.get("CLOUDINARY_API_SECRET")
+
+if not (CLOUDINARY_CLOUD_NAME and CLOUDINARY_API_KEY and CLOUDINARY_API_SECRET):
+    raise RuntimeError("الرجاء ضبط متغيرات البيئة الخاصة بـ Cloudinary: CLOUDINARY_CLOUD_NAME, CLOUDINARY_API_KEY, CLOUDINARY_API_SECRET")
+
+cloudinary.config(
+    cloud_name=CLOUDINARY_CLOUD_NAME,
+    api_key=CLOUDINARY_API_KEY,
+    api_secret=CLOUDINARY_API_SECRET,
+    secure=True,
+)
+
 
 # ===================== إعداد Gemini =====================
 
@@ -124,6 +145,8 @@ IMPORTANT
 ====================
 Return ONLY valid JSON. No markdown, no extra explanation.
 """
+
+
 
 
 # ===================== Helpers =====================
@@ -244,6 +267,25 @@ def call_wavespeed_edit(image_url: str, prompt: str) -> str:
 
         time.sleep(0.2)
 
+def upload_to_cloudinary_bytes(img_bytes: bytes, public_id: str | None = None) -> str:
+    """
+    يرفع الصورة (bytes) إلى Cloudinary ويرجع secure_url عام يمكن لـ WaveSpeed الوصول إليه.
+    """
+    upload_options = {
+        "resource_type": "image",
+    }
+    if public_id:
+        upload_options["public_id"] = public_id
+
+    # نستخدم BytesIO حتى نمرّرها كملف
+    file_obj = io.BytesIO(img_bytes)
+    file_obj.name = public_id or "artifact"
+
+    result = cloudinary.uploader.upload(file_obj, **upload_options)
+    secure_url = result.get("secure_url")
+    if not secure_url:
+        raise HTTPException(status_code=500, detail="فشل رفع الصورة إلى Cloudinary (لا يوجد secure_url في الاستجابة).")
+    return secure_url
 
 # ===================== Endpoints =====================
 
@@ -301,28 +343,34 @@ async def wavespeed_edit(
 @app.post("/artifact-3d-pipeline-wavespeed", response_model=Artifact3DPipelineWaveSpeedResponse)
 async def artifact_3d_pipeline_wavespeed(
     image: UploadFile = File(...),
-    image_url: str = Form(...),
 ):
     """
     Pipeline كامل:
-    - يأخذ:
-        * image: ملف صورة أثري (للتحليل عبر Gemini)
-        * image_url: رابط عام لنفس الصورة (للاستخدام مع WaveSpeed)
-    - 1) يحلل الصورة عبر Gemini -> arabic_definition + image_prompt_3d
-    - 2) يولّد صورة 3D مركبة عبر WaveSpeed باستخدام image_url + prompt
-    - يرجع الكل في استجابة واحدة.
+    1) يستقبل صورة (ملف) فقط.
+    2) يحللها عبر Gemini -> arabic_definition + image_prompt_3d
+    3) يرفع الصورة إلى Cloudinary ويحصل على URL عام (secure_url)
+    4) يرسل الـ URL إلى WaveSpeed باستخدام الـ prompt القادم من Gemini
+    5) يرجع وصف عربي + prompt + صورة 3D من WaveSpeed
     """
+
     if not image.content_type or not image.content_type.startswith("image/"):
         raise HTTPException(status_code=400, detail="الملف يجب أن يكون صورة (image/*).")
 
     try:
+        # نقرأ البايتات لمرة واحدة ونستخدمها لـ Gemini + Cloudinary
         img_bytes = await image.read()
 
         # 1) تحليل الصورة عبر Gemini
         artifact_info = call_gemini_analyze(img_bytes, image.content_type)
 
-        # 2) توليد الصورة 3D عبر WaveSpeed باستخدام image_url ونفس الـ prompt
-        out_url = call_wavespeed_edit(image_url=image_url, prompt=artifact_info.image_prompt_3d)
+        # 2) رفع الصورة إلى Cloudinary للحصول على image_url عام
+        public_url = upload_to_cloudinary_bytes(img_bytes)
+
+        # 3) استدعاء WaveSpeed باستخدام URL + prompt من Gemini
+        out_url = call_wavespeed_edit(
+            image_url=public_url,
+            prompt=artifact_info.image_prompt_3d,
+        )
 
         return Artifact3DPipelineWaveSpeedResponse(
             arabic_definition=artifact_info.arabic_definition,
@@ -332,4 +380,6 @@ async def artifact_3d_pipeline_wavespeed(
     except HTTPException:
         raise
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail=f"Error: {e}")
+
+
