@@ -1,0 +1,56 @@
+name: artifact_scanner
+description: تطبيق لمسح وتحليل القطع الأثرية
+publish_to: 'none'
+version: 1.0.0+1
+
+environment:
+  sdk: '>=3.0.0 <4.0.0'
+
+dependencies:
+  flutter:
+    sdk: flutter
+  
+  # للتعامل مع الصور
+  image_picker: ^1.0.4
+  
+  # للطلبات HTTP
+  http: ^1.1.0
+  dio: ^5.3.3
+  
+  # لإدارة الحالة
+  provider: ^6.0.5
+  
+  # للتعامل مع الصور وعرضها
+  cached_network_image: ^3.3.0
+  photo_view: ^0.14.0
+  
+  # للتخزين المحلي
+  shared_preferences: ^2.2.2
+  
+  # للأيقونات
+  cupertino_icons: ^1.0.2
+  
+  # للتحميل والانتظار
+  flutter_spinkit: ^5.2.0
+  
+  # للتعامل مع الصلاحيات
+  permission_handler: ^11.0.1
+  
+  # لعرض الرسائل
+  fluttertoast: ^8.2.4
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^2.0.0
+
+flutter:
+  uses-material-design: true
+  
+  # يمكنك إضافة الخطوط العربية هنا
+  fonts:
+    - family: Cairo
+      fonts:
+        - asset: fonts/Cairo-Regular.ttf
+        - asset: fonts/Cairo-Bold.ttf
+          weight: 700
