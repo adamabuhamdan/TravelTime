@@ -455,7 +455,7 @@ AI Engineer · Flutter Developer · Backend Architect
 
 For questions, issues, or suggestions:
 
-- 📧 Email: your.email@example.com
+- 📧 Email: abuhamdanadam15@gmail.com
 - 🐛 Issues: [GitHub Issues](https://github.com/yourrepo/issues)
 - 💬 Discussions: [GitHub Discussions](https://github.com/yourrepo/discussions)
 
