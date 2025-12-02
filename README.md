@@ -465,6 +465,6 @@ For questions, issues, or suggestions:
 
 **⭐ If you find this project helpful, please consider giving it a star! ⭐**
 
-Made with ❤️ and ☕ by Matthew Nashtec
+Made with ❤️ and ☕ by Adam Abu Hamdan
 
 </div>
