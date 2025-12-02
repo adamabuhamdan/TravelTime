@@ -435,9 +435,9 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 **Matthew Nashtec**  
 AI Engineer · Flutter Developer · Backend Architect
 
-[![LinkedIn](https://img.shields.io/badge/LinkedIn-Connect-0077B5?logo=linkedin)](https://linkedin.com/in/yourprofile)
-[![GitHub](https://img.shields.io/badge/GitHub-Follow-181717?logo=github)](https://github.com/yourprofile)
-[![Email](https://img.shields.io/badge/Email-Contact-D14836?logo=gmail)](mailto:your.email@example.com)
+[![LinkedIn](https://img.shields.io/badge/LinkedIn-Connect-0077B5?logo=linkedin)]([https://linkedin.com/in/yourprofile](https://www.linkedin.com/in/adam-abu-hamdan-a14993279/))
+[![GitHub](https://img.shields.io/badge/GitHub-Follow-181717?logo=github)]([https://github.com/yourprofile](https://github.com/adamabuhamdan))
+[![Email](https://img.shields.io/badge/Email-Contact-D14836?logo=gmail)](abuhamdanadam15@gmail.com)
 
 ---
 
